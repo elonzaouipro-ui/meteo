@@ -927,6 +927,11 @@ window.PRODUITS = [
   ];
   const initials = (B.nom || "B").replace(/[\[\]]/g, "").trim().slice(0, 1).toUpperCase();
 
+  // Détecte une session Supabase ouverte (sans charger la librairie)
+  function loggedIn() {
+    try { return Object.keys(localStorage).some((k) => /^sb-.+-auth-token$/.test(k) && localStorage.getItem(k)); } catch { return false; }
+  }
+
   function renderLayout() {
     const h = $("#site-header");
     if (h) {
@@ -936,7 +941,7 @@ window.PRODUITS = [
         <button class="burger" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
         <ul class="nav-links" id="menu">
           ${NAV.map(([k, href, label]) => `<li><a href="${href}" ${k === page ? 'aria-current="page"' : ""}>${label}</a></li>`).join("")}
-          <li class="nav-cta"><a href="connexion.html">S'inscrire</a></li>
+          <li class="nav-cta"><a href="${loggedIn() ? "dashboard.html" : "connexion.html"}">${loggedIn() ? "Mon compte" : "S'inscrire"}</a></li>
         </ul>
       </nav>`;
       const burger = $(".burger", h), menu = $("#menu", h);
@@ -1031,6 +1036,18 @@ window.PRODUITS = [
     return d;
   }
 
+  /* ---------- Favoris (enregistrés sur l'appareil, puis dans le compte via le tableau de bord) ---------- */
+  const FAV_KEY = "favoris";
+  const getFavs = () => { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; } };
+  const isFav = (id) => getFavs().some((f) => f.id === id);
+  function toggleFav(p) {
+    let list = getFavs();
+    const on = !list.some((f) => f.id === p.id);
+    list = on ? [...list, { id: p.id, nom: p.nom, marque: p.marque, categorie: p.categorie, prix: p.prix, couleur: p.couleur, ajoute: Date.now() }] : list.filter((f) => f.id !== p.id);
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); localStorage.setItem("favoris_maj", Date.now()); } catch {}
+    return on;
+  }
+
   function openProduct(id, pushHash = true) {
     const p = P.find((x) => x.id === id);
     if (!p) return;
@@ -1050,11 +1067,17 @@ window.PRODUITS = [
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <a class="btn btn-primary" href="#contact?produit=${encodeURIComponent(p.nom)}">Se renseigner sur ce produit</a>
             <a class="btn btn-ghost" href="${telHref(B.telephone)}">Appeler la boutique</a>
+            <button class="btn btn-ghost fav-btn" type="button" aria-pressed="${isFav(p.id)}">${isFav(p.id) ? "♥ Dans mes favoris" : "♡ Ajouter aux favoris"}</button>
           </div>
           <p class="detail-note" style="margin-top:16px">Disponibilité à confirmer en boutique. Visuel non contractuel.</p>
         </div>
       </div>`;
     $(".modal-close", d).addEventListener("click", () => d.close());
+    $(".fav-btn", d).addEventListener("click", (e) => {
+      const on = toggleFav(p);
+      e.currentTarget.setAttribute("aria-pressed", on);
+      e.currentTarget.textContent = on ? "♥ Dans mes favoris" : "♡ Ajouter aux favoris";
+    });
     d.onclose = () => { if (location.hash.startsWith("#produits/")) history.replaceState(null, "", "#produits"); };
     if (!d.open) d.showModal();
     if (pushHash) history.replaceState(null, "", "#produits/" + encodeURIComponent(p.id));
