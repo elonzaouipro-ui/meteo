@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon compte — [Nom de la boutique]</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#ffffff">
+  <!--
+    TABLEAU DE BORD CLIENT
+    ----------------------
+    Collez ici les MÊMES clés Supabase que dans connexion.html
+    (Ctrl+F : "CONFIGURATION SUPABASE").
+    Sans clés, la page s'affiche en MODE DÉMO avec un compte fictif.
+  -->
+  <style>
+:root {
+  --bg: #0a0a0d; --surface: #131318; --surface-2: #1b1b22; --border: #2a2a34;
+  --text: #f3f3f6; --muted: #a3a3b1; --accent: #5b8cff; --accent-2: #9d7bff;
+  --ok: #7ee2b0; --warn: #f5c451; --err: #ff8a8a; --radius: 20px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+[hidden] { display: none !important; }
+
+/* En-tête blanc */
+.top { position: sticky; top: 0; z-index: 20; background: #fff; color: #111118; border-bottom: 1px solid #e6e6ec; }
+.top-in { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.logo { display: flex; align-items: center; gap: .6em; font-weight: 700; text-decoration: none; min-width: 0; }
+.logo span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.logo-mark, .avatar { flex: none; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; color: #fff; font-weight: 700; }
+.logo-mark { width: 30px; height: 30px; font-size: .85rem; }
+.top-actions { display: flex; align-items: center; gap: 6px; }
+.top-link { color: #5c5c6b; text-decoration: none; font-weight: 500; padding: .5em .9em; border-radius: 999px; border: 0; background: none; cursor: pointer; white-space: nowrap; }
+.top-link:hover { background: #f2f2f6; color: #111118; }
+.avatar.sm { width: 34px; height: 34px; border-radius: 50%; font-size: .9rem; }
+
+/* Structure */
+.layout { max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; display: grid; grid-template-columns: 230px 1fr; gap: 32px; align-items: start; }
+.side { position: sticky; top: 96px; display: grid; gap: 4px; }
+.side button { display: flex; align-items: center; gap: 12px; width: 100%; padding: .75em 1em; border: 0; border-radius: 12px; background: none; color: var(--muted); font-weight: 500; text-align: left; cursor: pointer; transition: background .2s, color .2s; }
+.side button:hover { color: var(--text); background: var(--surface); }
+.side button[aria-current="page"] { background: var(--surface-2); color: var(--text); }
+.side svg { width: 20px; height: 20px; flex: none; }
+.side .count { margin-left: auto; font-size: .75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 0 .6em; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; gap: 20px; padding-top: 20px; }
+  .side { position: static; display: flex; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px; }
+  .side::-webkit-scrollbar { display: none; }
+  .side button { width: auto; flex: none; border: 1px solid var(--border); border-radius: 999px; padding: .55em 1em; }
+  .side svg { display: none; }
+}
+
+.view { animation: fade .4s cubic-bezier(.2,.7,.2,1); }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.head { margin-bottom: 24px; }
+.head h1 { font-size: clamp(1.7rem, 3.5vw, 2.3rem); }
+.head p { color: var(--muted); margin: .4em 0 0; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.panel + .panel { margin-top: 20px; }
+.panel h2 { font-size: 1.15rem; margin-bottom: 4px; }
+.panel .desc { color: var(--muted); font-size: .92rem; margin: 0 0 18px; }
+
+/* Vue d'ensemble */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.stat .label { color: var(--muted); font-size: .85rem; }
+.stat .value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; letter-spacing: -.02em; }
+.stat .value.small { font-size: 1.05rem; padding-top: 8px; }
+.pill { display: inline-flex; align-items: center; gap: .4em; font-size: .8rem; font-weight: 600; padding: .25em .7em; border-radius: 999px; }
+.pill.ok { background: #10281e; color: var(--ok); border: 1px solid #245c44; }
+.pill.warn { background: #2b2410; color: var(--warn); border: 1px solid #5c4b1f; }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.quick a, .quick button { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg); text-decoration: none; text-align: left; cursor: pointer; transition: border-color .2s, transform .2s; }
+.quick a:hover, .quick button:hover { border-color: var(--accent); transform: translateY(-2px); }
+.quick strong { font-size: .98rem; }
+.quick span { color: var(--muted); font-size: .85rem; }
+.quick svg { width: 22px; height: 22px; color: var(--accent); }
+@media (max-width: 760px) { .stats, .quick { grid-template-columns: 1fr; } }
+
+/* Favoris */
+.favs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.fav { display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); }
+.fav .thumb { width: 44px; height: 72px; border-radius: 10px; flex: none; }
+.fav .info { flex: 1; min-width: 0; }
+.fav .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav .meta { color: var(--muted); font-size: .82rem; }
+.fav .price { font-weight: 600; font-size: .9rem; margin-top: 2px; }
+.fav .acts { display: flex; flex-direction: column; gap: 6px; }
+.icon-btn { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; text-decoration: none; color: var(--muted); }
+.icon-btn:hover { color: var(--text); border-color: var(--text); }
+.icon-btn svg { width: 16px; height: 16px; }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); border: 1px dashed var(--border); border-radius: 16px; }
+.empty .big { font-size: 2rem; margin-bottom: 6px; }
+
+/* Formulaires */
+form { display: grid; gap: 16px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+label { display: block; font-size: .88rem; font-weight: 500; margin-bottom: 6px; }
+input[type="text"], input[type="email"], input[type="tel"], input[type="password"] { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: .75em 1em; transition: border-color .2s; }
+input:focus { outline: none; border-color: var(--accent); }
+input[readonly] { color: var(--muted); }
+input[aria-invalid="true"] { border-color: var(--err); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--muted); font-weight: 400; margin: 0; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5em; padding: .75em 1.3em; border-radius: 999px; border: 1px solid transparent; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--accent); color: #fff; transition: transform .2s, background .2s, opacity .2s; }
+.btn:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--accent) 85%, white); }
+.btn[disabled] { opacity: .6; cursor: wait; transform: none; }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+.btn-ghost:hover { background: transparent; border-color: var(--text); }
+.btn-danger { background: transparent; border-color: #5c2428; color: var(--err); }
+.btn-danger:hover { background: #2a1214; }
+.msg { font-size: .9rem; border-radius: 12px; }
+.msg:empty { display: none; }
+.msg:not(:empty) { padding: 10px 14px; }
+.msg.ok { background: #10281e; color: var(--ok); border: 1px solid #245c44; }
+.msg.err { background: #2a1214; color: var(--err); border: 1px solid #5c2428; }
+.msg.info { background: #141c33; color: #a9c1ff; border: 1px solid #2a3b6b; }
+.demo { font-size: .85rem; color: #a9c1ff; background: #141c33; border: 1px solid #2a3b6b; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; }
+.danger-zone { border-color: #5c2428; }
+
+.loading { min-height: 60vh; display: grid; place-items: center; color: var(--muted); }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 480px) { .top-link.hide-sm { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <a class="logo" href="index.html"><span class="logo-mark" id="logo-mark" aria-hidden="true">N</span><span id="shop-name">[Nom de la boutique]</span></a>
+      <div class="top-actions">
+        <a class="top-link hide-sm" href="index.html">← Retour au site</a>
+        <button class="top-link" id="logout-top" type="button">Déconnexion</button>
+        <span class="avatar sm" id="avatar-top" aria-hidden="true">?</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="loading" id="loading"><div><div class="spinner"></div>Chargement de votre espace…</div></div>
+
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Menu du compte">
+      <button data-tab="accueil" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>Vue d'ensemble</button>
+      <button data-tab="favoris"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>Mes favoris <span class="count" id="fav-count">0</span></button>
+      <button data-tab="profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mon profil</button>
+      <button data-tab="securite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Sécurité</button>
+    </nav>
+
+    <main>
+      <p class="demo" id="demo-banner" hidden><strong>Mode démo :</strong> compte fictif, rien n'est enregistré en ligne. Ajoutez vos clés Supabase (voir le haut du fichier) pour activer les vrais comptes.</p>
+
+      <!-- ===== Vue d'ensemble ===== -->
+      <section class="view" data-view="accueil">
+        <div class="head"><h1 id="hello">Bonjour !</h1><p>Bienvenue dans votre espace client.</p></div>
+        <div class="stats">
+          <div class="stat"><div class="label">Produits en favoris</div><div class="value" id="stat-favs">0</div></div>
+          <div class="stat"><div class="label">Membre depuis</div><div class="value small" id="stat-since">—</div></div>
+          <div class="stat"><div class="label">Adresse e-mail</div><div class="value small" id="stat-email"></div></div>
+        </div>
+        <div class="panel">
+          <h2>Raccourcis</h2>
+          <p class="desc">Ce que vous pouvez faire depuis votre compte.</p>
+          <div class="quick">
+            <a href="index.html#produits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg><strong>Voir les produits</strong><span>Parcourir le catalogue</span></a>
+            <a href="index.html#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg><strong>Contacter la boutique</strong><span>Une question, une disponibilité</span></a>
+            <button type="button" data-go="profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><strong>Modifier mon profil</strong><span>Nom, téléphone, préférences</span></button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="actions" style="justify-content:space-between;margin-bottom:14px">
+            <div><h2>Derniers favoris</h2></div>
+            <button class="btn btn-ghost" type="button" data-go="favoris">Tout voir</button>
+          </div>
+          <div class="favs" id="recent-favs"></div>
+        </div>
+      </section>
+
+      <!-- ===== Favoris ===== -->
+      <section class="view" data-view="favoris" hidden>
+        <div class="head"><h1>Mes favoris</h1><p>Les produits que vous avez mis de côté. Ajoutez-en depuis une fiche produit avec le bouton « ♡ Ajouter aux favoris ».</p></div>
+        <div class="panel"><div class="favs" id="all-favs"></div></div>
+      </section>
+
+      <!-- ===== Profil ===== -->
+      <section class="view" data-view="profil" hidden>
+        <div class="head"><h1>Mon profil</h1><p>Vos informations personnelles.</p></div>
+        <div class="panel">
+          <form id="profile-form" novalidate>
+            <div class="row">
+              <div><label for="pf-prenom">Prénom</label><input id="pf-prenom" name="prenom" type="text" autocomplete="given-name" required></div>
+              <div><label for="pf-nom">Nom</label><input id="pf-nom" name="nom" type="text" autocomplete="family-name" required></div>
+            </div>
+            <div class="row">
+              <div><label for="pf-email">E-mail</label><input id="pf-email" name="email" type="email" autocomplete="email" required><p class="hint">Si vous changez d'adresse, un e-mail de confirmation vous sera envoyé.</p></div>
+              <div><label for="pf-tel">Téléphone (facultatif)</label><input id="pf-tel" name="telephone" type="tel" autocomplete="tel"></div>
+            </div>
+            <label class="check"><input type="checkbox" name="newsletter"> <span>Recevoir les nouveautés de la boutique par e-mail</span></label>
+            <p class="msg" id="profile-msg" role="status"></p>
+            <div class="actions"><button class="btn" type="submit">Enregistrer</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ===== Sécurité ===== -->
+      <section class="view" data-view="securite" hidden>
+        <div class="head"><h1>Sécurité</h1><p>Mot de passe et connexions.</p></div>
+        <div class="panel">
+          <h2>Changer le mot de passe</h2>
+          <p class="desc">8 caractères minimum, avec au moins une lettre et un chiffre.</p>
+          <form id="password-form" novalidate>
+            <div class="row">
+              <div><label for="pw1">Nouveau mot de passe</label><input id="pw1" name="pw1" type="password" autocomplete="new-password" required></div>
+              <div><label for="pw2">Confirmer</label><input id="pw2" name="pw2" type="password" autocomplete="new-password" required></div>
+            </div>
+            <p class="msg" id="password-msg" role="status"></p>
+            <div class="actions"><button class="btn" type="submit">Mettre à jour</button></div>
+          </form>
+        </div>
+        <div class="panel">
+          <h2>Appareils connectés</h2>
+          <p class="desc">Vous avez oublié de vous déconnecter sur un autre appareil ? Déconnectez-vous partout d'un seul clic.</p>
+          <button class="btn btn-ghost" id="logout-all" type="button">Se déconnecter de tous les appareils</button>
+        </div>
+        <div class="panel danger-zone">
+          <h2>Supprimer mon compte</h2>
+          <p class="desc">Conformément au RGPD, vous pouvez demander la suppression de votre compte et de vos données. La boutique traitera votre demande dans un délai d'un mois maximum.</p>
+          <a class="btn btn-danger" id="delete-link" href="#">Demander la suppression</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    /* =========================================================
+       CONFIGURATION SUPABASE — mêmes valeurs que dans connexion.html
+       ========================================================= */
+    const SUPABASE_URL = "";
+    const SUPABASE_ANON_KEY = "";
+    const NOM_BOUTIQUE = "[Nom de la boutique]";
+    const EMAIL_BOUTIQUE = "contact@exemple.fr";   // reçoit les demandes de suppression de compte
+
+    /* ---------- Rien à modifier en dessous ---------- */
+    const $ = (id) => document.getElementById(id);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+    const say = (id, text, type = "info") => { $(id).className = "msg " + type; $(id).textContent = text; };
+    const busy = (form, on) => { form.querySelector('button[type="submit"]').disabled = on; };
+
+    $("shop-name").textContent = NOM_BOUTIQUE;
+    $("logo-mark").textContent = (NOM_BOUTIQUE.replace(/[\[\]]/g, "").trim()[0] || "B").toUpperCase();
+
+    /* --- Connexion à Supabase (ou mode démo) --- */
+    let sb = null, user = null;
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+        sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data } = await sb.auth.getSession();
+        if (!data.session) { location.replace("connexion.html#connexion"); throw "redirect"; }
+        user = data.session.user;
+        sb.auth.onAuthStateChange((event, s) => {
+          if (event === "SIGNED_OUT") location.replace("connexion.html#connexion");
+          if (s) { user = s.user; }
+        });
+      } catch (e) {
+        if (e === "redirect") await new Promise(() => {}); // on s'arrête ici
+        console.error(e);
+      }
+    }
+    const DEMO = !sb;
+    if (DEMO) {
+      user = { email: "client@exemple.fr", email_confirmed_at: new Date().toISOString(), created_at: new Date(Date.now() - 86400000 * 12).toISOString(),
+               user_metadata: { prenom: "Camille", nom: "Martin", telephone: "", newsletter: false } };
+    }
+    $("demo-banner").hidden = !DEMO;
+
+    /* --- Favoris : fusion appareil + compte --- */
+    const localFavs = () => { try { return JSON.parse(localStorage.getItem("favoris")) || []; } catch { return []; } };
+    const saveLocal = (list) => { try { localStorage.setItem("favoris", JSON.stringify(list)); } catch {} };
+    let favs = (() => {
+      const map = new Map();
+      [...(user.user_metadata?.favoris || []), ...localFavs()].forEach((f) => f && f.id && map.set(f.id, f));
+      return [...map.values()].sort((a, b) => (b.ajoute || 0) - (a.ajoute || 0));
+    })();
+    saveLocal(favs);
+    async function syncFavs() {
+      saveLocal(favs);
+      if (sb) await sb.auth.updateUser({ data: { favoris: favs } });
+    }
+    if (sb && JSON.stringify(user.user_metadata?.favoris || []) !== JSON.stringify(favs)) syncFavs();
+
+    const phoneThumb = (c) => `<svg class="thumb" viewBox="0 0 44 72" aria-hidden="true"><rect x="1" y="1" width="42" height="70" rx="10" fill="${esc(c || "#8a8f98")}" opacity=".9"/><rect x="5" y="5" width="16" height="16" rx="5" fill="rgba(0,0,0,.25)"/></svg>`;
+    const favHTML = (f) => `<div class="fav">
+        ${phoneThumb(f.couleur)}
+        <div class="info">
+          <div class="name" title="${esc(f.nom)}">${esc(f.nom)}</div>
+          <div class="meta">${esc(f.marque)} · ${esc(f.categorie)}</div>
+          <div class="price">${typeof f.prix === "number" ? euro.format(f.prix) + " TTC" : "Prix sur demande"}</div>
+        </div>
+        <div class="acts">
+          <a class="icon-btn" href="index.html#produits/${encodeURIComponent(f.id)}" aria-label="Voir ${esc(f.nom)}" title="Voir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <button class="icon-btn" type="button" data-remove="${esc(f.id)}" aria-label="Retirer ${esc(f.nom)} des favoris" title="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      </div>`;
+    const emptyHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">♡</div>Aucun favori pour l'instant.<br><a href="index.html#produits" style="color:var(--accent)">Découvrir les produits</a></div>`;
+
+    function renderFavs() {
+      $("all-favs").innerHTML = favs.length ? favs.map(favHTML).join("") : emptyHTML;
+      $("recent-favs").innerHTML = favs.length ? favs.slice(0, 3).map(favHTML).join("") : emptyHTML;
+      $("fav-count").textContent = favs.length;
+      $("stat-favs").textContent = favs.length;
+    }
+    document.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-remove]");
+      if (!b) return;
+      favs = favs.filter((f) => f.id !== b.dataset.remove);
+      renderFavs();
+      await syncFavs();
+    });
+
+    /* --- Infos utilisateur --- */
+    function renderUser() {
+      const m = user.user_metadata || {};
+      const initial = (m.prenom || user.email || "?")[0].toUpperCase();
+      $("avatar-top").textContent = initial;
+      $("hello").textContent = "Bonjour" + (m.prenom ? " " + m.prenom : "") + " !";
+      $("stat-since").textContent = new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+      $("stat-email").innerHTML = user.email_confirmed_at
+        ? `<span class="pill ok">✓ Vérifiée</span>`
+        : `<span class="pill warn">En attente de confirmation</span>`;
+      const f = $("profile-form");
+      f.prenom.value = m.prenom || ""; f.nom.value = m.nom || ""; f.email.value = user.email || "";
+      f.telephone.value = m.telephone || ""; f.newsletter.checked = !!m.newsletter;
+      $("delete-link").href = `mailto:${EMAIL_BOUTIQUE}?subject=${encodeURIComponent("Demande de suppression de compte")}&body=${encodeURIComponent(`Bonjour,\n\nJe demande la suppression de mon compte et de mes données personnelles.\n\nE-mail du compte : ${user.email}\n\nMerci.`)}`;
+    }
+
+    /* --- Onglets --- */
+    function go(tab) {
+      $$(".view").forEach((v) => (v.hidden = v.dataset.view !== tab));
+      $$(".side button").forEach((b) => b.toggleAttribute("aria-current", b.dataset.tab === tab) && b.setAttribute("aria-current", "page"));
+      history.replaceState(null, "", "#" + tab);
+      window.scrollTo({ top: 0 });
+    }
+    $$(".side button").forEach((b) => (b.onclick = () => go(b.dataset.tab)));
+    $$("[data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
+
+    /* --- Profil --- */
+    const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    $("profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const prenom = f.prenom.value.trim(), nom = f.nom.value.trim(), email = f.email.value.trim();
+      f.prenom.setAttribute("aria-invalid", !prenom); f.nom.setAttribute("aria-invalid", !nom); f.email.setAttribute("aria-invalid", !emailOk(email));
+      if (!prenom || !nom || !emailOk(email)) return say("profile-msg", "Merci de vérifier les champs en rouge.", "err");
+      const data = { prenom, nom, telephone: f.telephone.value.trim(), newsletter: f.newsletter.checked };
+      if (DEMO) { Object.assign(user.user_metadata, data); user.email = email; renderUser(); return say("profile-msg", "Mode démo : modifications affichées mais non enregistrées.", "info"); }
+      busy(f, true);
+      const payload = { data };
+      if (email !== user.email) payload.email = email;
+      const { data: res, error } = await sb.auth.updateUser(payload);
+      busy(f, false);
+      if (error) return say("profile-msg", "Impossible d'enregistrer : " + error.message, "err");
+      user = res.user; renderUser();
+      say("profile-msg", payload.email ? "Enregistré ! Confirmez votre nouvelle adresse via l'e-mail que vous allez recevoir." : "Modifications enregistrées.", "ok");
+    });
+
+    /* --- Mot de passe --- */
+    $("password-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target, p = f.pw1.value;
+      if (!(p.length >= 8 && /[a-zA-Z]/.test(p) && /\d/.test(p))) { f.pw1.setAttribute("aria-invalid", true); return say("password-msg", "Mot de passe trop faible.", "err"); }
+      f.pw1.setAttribute("aria-invalid", false);
+      if (p !== f.pw2.value) { f.pw2.setAttribute("aria-invalid", true); return say("password-msg", "Les deux mots de passe ne correspondent pas.", "err"); }
+      f.pw2.setAttribute("aria-invalid", false);
+      if (DEMO) { f.reset(); return say("password-msg", "Mode démo : le mot de passe n'a pas été modifié.", "info"); }
+      busy(f, true);
+      const { error } = await sb.auth.updateUser({ password: p });
+      busy(f, false);
+      if (error) return say("password-msg", error.message.includes("different") ? "Le nouveau mot de passe doit être différent de l'ancien." : "Impossible de modifier le mot de passe.", "err");
+      f.reset(); say("password-msg", "Mot de passe mis à jour.", "ok");
+    });
+
+    /* --- Déconnexion --- */
+    async function logout(scope) {
+      if (DEMO) return location.href = "connexion.html#connexion";
+      await sb.auth.signOut(scope ? { scope } : undefined);
+      location.replace("connexion.html#connexion");
+    }
+    $("logout-top").onclick = () => logout();
+    $("logout-all").onclick = () => { if (confirm("Se déconnecter de tous les appareils ?")) logout("global"); };
+
+    /* --- Démarrage --- */
+    renderUser();
+    renderFavs();
+    $("loading").hidden = true;
+    $("app").hidden = false;
+    const start = location.hash.slice(1);
+    go(["accueil", "favoris", "profil", "securite"].includes(start) ? start : "accueil");
+  </script>
+</body>
+</html>
