@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connexion / Inscription — [Nom de la boutique]</title>
+  <meta name="description" content="Créez votre compte ou connectez-vous.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#ffffff">
+  <!--
+    PAGE CONNEXION / INSCRIPTION
+    ----------------------------
+    Pour activer les VRAIS comptes (gratuit) :
+      1. Créez un compte sur https://supabase.com puis un nouveau projet.
+      2. Dans Supabase : Project Settings → API. Copiez "Project URL" et "anon public key".
+      3. Collez-les plus bas, dans "CONFIGURATION SUPABASE" (Ctrl+F).
+      4. Dans Supabase : Authentication → URL Configuration → "Site URL" :
+         mettez l'adresse de votre site (ex. https://votre-site.vercel.app).
+    Tant que ce n'est pas fait, la page fonctionne en MODE DÉMO :
+    le formulaire se vérifie, mais aucun compte n'est créé.
+  -->
+  <style>
+:root {
+  --bg: #0a0a0d; --surface: #131318; --surface-2: #1b1b22; --border: #2a2a34;
+  --text: #f3f3f6; --muted: #a3a3b1; --accent: #5b8cff; --accent-2: #9d7bff;
+  --ok: #7ee2b0; --err: #ff8a8a; --radius: 22px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+/* En-tête blanc (comme le site) */
+.top { background: #fff; color: #111118; border-bottom: 1px solid #e6e6ec; }
+.top-in { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: .6em; font-weight: 700; text-decoration: none; }
+.logo-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; color: #fff; font-size: .85rem; }
+.back { display: inline-flex; align-items: center; gap: .4em; color: #5c5c6b; text-decoration: none; font-weight: 500; padding: .5em .9em; border-radius: 999px; }
+.back:hover { background: #f2f2f6; color: #111118; }
+
+/* Mise en page */
+main { flex: 1; display: grid; place-items: center; padding: 40px 16px 60px; position: relative; overflow: hidden; }
+main::before { content: ""; position: absolute; inset: -30% -20% auto; height: 110%; z-index: -1; pointer-events: none;
+  background: radial-gradient(45% 45% at 70% 30%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
+              radial-gradient(40% 40% at 20% 20%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%); }
+.card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 28px; box-shadow: 0 30px 80px -30px rgba(0,0,0,.7); animation: pop .5s cubic-bezier(.2,.7,.2,1); }
+@keyframes pop { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+h1 { font-size: 1.8rem; line-height: 1.15; letter-spacing: -.02em; margin: 0 0 .3em; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+
+/* Onglets */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; margin-bottom: 24px; }
+.tab { border: 0; background: none; padding: .65em; border-radius: 999px; cursor: pointer; font-weight: 600; color: var(--muted); transition: background .2s, color .2s; }
+.tab[aria-selected="true"] { background: var(--text); color: var(--bg); }
+
+/* Formulaires */
+form { display: grid; gap: 16px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+label { display: block; font-size: .9rem; font-weight: 500; margin-bottom: 6px; }
+.field { position: relative; }
+input[type="text"], input[type="email"], input[type="password"] { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: .8em 1em; transition: border-color .2s; }
+input:focus { outline: none; border-color: var(--accent); }
+input[aria-invalid="true"] { border-color: var(--err); }
+.pw-in { position: relative; }
+.pw-in input { padding-right: 3.2em; }
+.eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0; background: none; border-radius: 8px; cursor: pointer; color: var(--muted); display: grid; place-items: center; }
+.eye:hover { color: var(--text); background: var(--surface-2); }
+.eye svg { width: 20px; height: 20px; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.meter { height: 4px; border-radius: 4px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--err); transition: width .3s, background .3s; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; color: var(--muted); font-weight: 400; margin: 0; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: .9rem; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.between { display: flex; justify-content: flex-end; margin-top: -6px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5em; width: 100%; padding: .9em 1.4em; border-radius: 999px; border: 1px solid transparent; font-weight: 600; cursor: pointer; text-decoration: none; background: var(--accent); color: #fff; transition: transform .2s, background .2s, opacity .2s; }
+.btn:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--accent) 85%, white); }
+.btn[disabled] { opacity: .6; cursor: wait; transform: none; }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+.btn-ghost:hover { background: transparent; border-color: var(--text); }
+.msg { font-size: .92rem; border-radius: 12px; padding: 0; min-height: 0; }
+.msg:not(:empty) { padding: 12px 14px; }
+.msg.ok { background: #10281e; color: var(--ok); border: 1px solid #245c44; }
+.msg.err { background: #2a1214; color: var(--err); border: 1px solid #5c2428; }
+.msg.info { background: #141c33; color: #a9c1ff; border: 1px solid #2a3b6b; }
+.demo { font-size: .82rem; color: #a9c1ff; background: #141c33; border: 1px solid #2a3b6b; border-radius: 12px; padding: 10px 12px; margin-bottom: 20px; }
+.legal { font-size: .78rem; color: var(--muted); text-align: center; margin: 20px 0 0; }
+.account { text-align: center; display: grid; gap: 14px; }
+.avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; font-size: 1.8rem; font-weight: 700; color: #fff; }
+[hidden] { display: none !important; }
+@media (max-width: 420px) { .row { grid-template-columns: 1fr; } .card { padding: 26px 20px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true">N</span><span id="shop-name">[Nom de la boutique]</span></a>
+      <a class="back" href="index.html">← Retour au site</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <p class="demo" id="demo-banner" hidden><strong>Mode démo :</strong> aucun compte n'est réellement créé. Voir les instructions en haut du fichier pour activer les comptes.</p>
+
+      <!-- ===== Connexion / Inscription ===== -->
+      <section id="auth">
+        <h1 id="title">Bienvenue</h1>
+        <p class="sub" id="subtitle">Connectez-vous ou créez votre compte.</p>
+
+        <div class="tabs" role="tablist" aria-label="Choisir">
+          <button class="tab" role="tab" id="tab-login" aria-controls="login-form" aria-selected="true">Se connecter</button>
+          <button class="tab" role="tab" id="tab-signup" aria-controls="signup-form" aria-selected="false">S'inscrire</button>
+        </div>
+
+        <!-- Connexion -->
+        <form id="login-form" role="tabpanel" aria-labelledby="tab-login" novalidate>
+          <div>
+            <label for="login-email">E-mail</label>
+            <input id="login-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field pw">
+            <label for="login-password">Mot de passe</label>
+            <div class="pw-in"><input id="login-password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="eye" aria-label="Afficher le mot de passe" data-eye="login-password"></button></div>
+          </div>
+          <div class="between"><button type="button" class="link" id="forgot-link">Mot de passe oublié ?</button></div>
+          <p class="msg" id="login-msg" role="status"></p>
+          <button class="btn" type="submit">Se connecter</button>
+        </form>
+
+        <!-- Inscription -->
+        <form id="signup-form" role="tabpanel" aria-labelledby="tab-signup" novalidate hidden>
+          <div class="row">
+            <div><label for="su-prenom">Prénom</label><input id="su-prenom" name="prenom" type="text" autocomplete="given-name" required></div>
+            <div><label for="su-nom">Nom</label><input id="su-nom" name="nom" type="text" autocomplete="family-name" required></div>
+          </div>
+          <div>
+            <label for="su-email">E-mail</label>
+            <input id="su-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field pw">
+            <label for="su-password">Mot de passe</label>
+            <div class="pw-in"><input id="su-password" name="password" type="password" autocomplete="new-password" minlength="8" required aria-describedby="pw-hint">
+            <button type="button" class="eye" aria-label="Afficher le mot de passe" data-eye="su-password"></button></div>
+            <div class="meter" aria-hidden="true"><i id="pw-meter"></i></div>
+            <p class="hint" id="pw-hint">8 caractères minimum, avec au moins une lettre et un chiffre.</p>
+          </div>
+          <div class="field pw">
+            <label for="su-password2">Confirmer le mot de passe</label>
+            <input id="su-password2" name="password2" type="password" autocomplete="new-password" required>
+          </div>
+          <label class="check"><input type="checkbox" name="rgpd" required> <span>J'accepte que mes données soient utilisées pour gérer mon compte, conformément à la <a href="index.html#mentions-legales">politique de confidentialité</a>.</span></label>
+          <label class="check"><input type="checkbox" name="news"> <span>Je souhaite recevoir les nouveautés de la boutique par e-mail (facultatif).</span></label>
+          <p class="msg" id="signup-msg" role="status"></p>
+          <button class="btn" type="submit">Créer mon compte</button>
+        </form>
+
+        <!-- Mot de passe oublié -->
+        <form id="forgot-form" novalidate hidden>
+          <p class="sub" style="margin:0">Indiquez votre e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
+          <div><label for="fg-email">E-mail</label><input id="fg-email" name="email" type="email" autocomplete="email" required></div>
+          <p class="msg" id="forgot-msg" role="status"></p>
+          <button class="btn" type="submit">Envoyer le lien</button>
+          <button class="btn btn-ghost" type="button" id="forgot-back">Retour à la connexion</button>
+        </form>
+
+        <!-- Nouveau mot de passe (après clic sur le lien reçu par e-mail) -->
+        <form id="reset-form" novalidate hidden>
+          <div class="field pw">
+            <label for="rs-password">Nouveau mot de passe</label>
+            <div class="pw-in"><input id="rs-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+            <button type="button" class="eye" aria-label="Afficher le mot de passe" data-eye="rs-password"></button></div>
+          </div>
+          <p class="msg" id="reset-msg" role="status"></p>
+          <button class="btn" type="submit">Enregistrer</button>
+        </form>
+      </section>
+
+      <!-- ===== Compte connecté ===== -->
+      <section id="account" class="account" hidden>
+        <div class="avatar" id="avatar" aria-hidden="true">?</div>
+        <h1 id="hello" style="margin:0">Bonjour</h1>
+        <p class="sub" id="account-email" style="margin:0"></p>
+        <a class="btn" href="index.html">Retour au site</a>
+        <button class="btn btn-ghost" id="logout" type="button">Se déconnecter</button>
+      </section>
+
+      <p class="legal">Vos données ne sont jamais revendues. <a href="index.html#mentions-legales">En savoir plus</a></p>
+    </div>
+  </main>
+
+  <script type="module">
+    /* =========================================================
+       CONFIGURATION SUPABASE — collez vos clés ici
+       (Supabase → Project Settings → API)
+       ========================================================= */
+    const SUPABASE_URL = "";        // ex. "https://abcdefgh.supabase.co"
+    const SUPABASE_ANON_KEY = "";   // la clé "anon public" (elle peut être publique)
+    const NOM_BOUTIQUE = "[Nom de la boutique]";
+
+    /* ---------- Rien à modifier en dessous ---------- */
+    const $ = (id) => document.getElementById(id);
+    $("shop-name").textContent = NOM_BOUTIQUE;
+    document.querySelector(".logo-mark").textContent = (NOM_BOUTIQUE.replace(/[\[\]]/g, "").trim()[0] || "B").toUpperCase();
+
+    let sb = null;
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+        sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    $("demo-banner").hidden = !!sb;
+
+    /* Messages */
+    const say = (el, text, type = "info") => { const m = $(el); m.className = "msg " + type; m.textContent = text; };
+    const clear = (el) => { const m = $(el); m.className = "msg"; m.textContent = ""; };
+    const busy = (form, on) => { const b = form.querySelector('button[type="submit"]'); b.disabled = on; };
+    const FR_ERR = {
+      "Invalid login credentials": "E-mail ou mot de passe incorrect.",
+      "Email not confirmed": "Veuillez d'abord confirmer votre e-mail (vérifiez votre boîte de réception).",
+      "User already registered": "Un compte existe déjà avec cet e-mail. Essayez de vous connecter.",
+      "Password should be at least 6 characters": "Le mot de passe est trop court."
+    };
+    const tr = (e) => FR_ERR[e?.message] || "Une erreur est survenue. Réessayez dans un instant.";
+
+    /* Vues */
+    const views = ["login-form", "signup-form", "forgot-form", "reset-form"];
+    function show(view) {
+      views.forEach((v) => ($(v).hidden = v !== view));
+      const tabs = view === "login-form" || view === "signup-form";
+      document.querySelector(".tabs").hidden = !tabs;
+      $("tab-login").setAttribute("aria-selected", view === "login-form");
+      $("tab-signup").setAttribute("aria-selected", view === "signup-form");
+      $("title").textContent = { "login-form": "Bon retour", "signup-form": "Créer un compte", "forgot-form": "Mot de passe oublié", "reset-form": "Nouveau mot de passe" }[view];
+      $("subtitle").hidden = !tabs;
+      $("subtitle").textContent = view === "signup-form" ? "Quelques secondes suffisent." : "Connectez-vous à votre compte.";
+      const first = $(view).querySelector("input"); if (first && document.activeElement !== document.body) first.focus();
+    }
+    $("tab-login").onclick = () => show("login-form");
+    $("tab-signup").onclick = () => show("signup-form");
+    $("forgot-link").onclick = () => { $("fg-email").value = $("login-email").value; show("forgot-form"); };
+    $("forgot-back").onclick = () => show("login-form");
+    // Flèches gauche/droite entre les onglets (accessibilité)
+    document.querySelector(".tabs").addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const next = $("tab-login").getAttribute("aria-selected") === "true" ? "tab-signup" : "tab-login";
+      $(next).click(); $(next).focus();
+    });
+    // Ouvre directement l'onglet inscription avec connexion.html#inscription
+    show(location.hash === "#connexion" ? "login-form" : "signup-form");
+
+    /* Afficher / masquer le mot de passe */
+    const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+    document.querySelectorAll("[data-eye]").forEach((b) => {
+      b.innerHTML = EYE;
+      b.onclick = () => {
+        const i = $(b.dataset.eye), vis = i.type === "password";
+        i.type = vis ? "text" : "password";
+        b.innerHTML = vis ? EYE_OFF : EYE;
+        b.setAttribute("aria-label", vis ? "Masquer le mot de passe" : "Afficher le mot de passe");
+      };
+    });
+
+    /* Force du mot de passe */
+    const strong = (p) => p.length >= 8 && /[a-zA-Z]/.test(p) && /\d/.test(p);
+    $("su-password").addEventListener("input", (e) => {
+      const p = e.target.value;
+      let s = 0;
+      if (p.length >= 8) s++; if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++; if (/\d/.test(p)) s++; if (/[^a-zA-Z0-9]/.test(p)) s++; if (p.length >= 12) s++;
+      const m = $("pw-meter");
+      m.style.width = (s / 5) * 100 + "%";
+      m.style.background = s <= 2 ? "var(--err)" : s === 3 ? "#f5c451" : "var(--ok)";
+    });
+
+    /* Validation */
+    const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    function mark(input, bad) { input.setAttribute("aria-invalid", bad ? "true" : "false"); return bad; }
+
+    /* Connexion */
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target; clear("login-msg");
+      const bad = mark(f.email, !emailOk(f.email.value.trim())) | mark(f.password, !f.password.value);
+      if (bad) return say("login-msg", "Renseignez votre e-mail et votre mot de passe.", "err");
+      if (!sb) return say("login-msg", "Mode démo : le formulaire est valide. Activez Supabase pour vous connecter réellement.", "info");
+      busy(f, true);
+      const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+      busy(f, false);
+      if (error) say("login-msg", tr(error), "err");
+    });
+
+    /* Inscription */
+    $("signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target; clear("signup-msg");
+      let bad = false;
+      bad |= mark(f.prenom, !f.prenom.value.trim());
+      bad |= mark(f.nom, !f.nom.value.trim());
+      bad |= mark(f.email, !emailOk(f.email.value.trim()));
+      if (bad) return say("signup-msg", "Merci de remplir correctement tous les champs.", "err");
+      if (mark(f.password, !strong(f.password.value))) return say("signup-msg", "Mot de passe trop faible : 8 caractères minimum, avec au moins une lettre et un chiffre.", "err");
+      if (mark(f.password2, f.password.value !== f.password2.value)) return say("signup-msg", "Les deux mots de passe ne correspondent pas.", "err");
+      if (!f.rgpd.checked) return say("signup-msg", "Veuillez accepter la politique de confidentialité.", "err");
+      if (!sb) return say("signup-msg", "Mode démo : le formulaire est valide. Activez Supabase pour créer réellement le compte.", "info");
+      busy(f, true);
+      const { data, error } = await sb.auth.signUp({
+        email: f.email.value.trim(),
+        password: f.password.value,
+        options: {
+          data: { prenom: f.prenom.value.trim(), nom: f.nom.value.trim(), newsletter: f.news.checked },
+          emailRedirectTo: location.origin + location.pathname
+        }
+      });
+      busy(f, false);
+      if (error) return say("signup-msg", tr(error), "err");
+      if (data.session) return; // confirmation d'e-mail désactivée : déjà connecté
+      f.reset(); $("pw-meter").style.width = 0;
+      say("signup-msg", "Compte créé ! Un e-mail de confirmation vient de vous être envoyé : cliquez sur le lien pour l'activer.", "ok");
+    });
+
+    /* Mot de passe oublié */
+    $("forgot-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target; clear("forgot-msg");
+      if (mark(f.email, !emailOk(f.email.value.trim()))) return say("forgot-msg", "Adresse e-mail invalide.", "err");
+      if (!sb) return say("forgot-msg", "Mode démo : aucun e-mail n'est envoyé.", "info");
+      busy(f, true);
+      await sb.auth.resetPasswordForEmail(f.email.value.trim(), { redirectTo: location.origin + location.pathname });
+      busy(f, false);
+      // Message identique que le compte existe ou non (sécurité)
+      say("forgot-msg", "Si un compte existe avec cette adresse, vous allez recevoir un e-mail avec un lien.", "ok");
+    });
+
+    /* Nouveau mot de passe */
+    $("reset-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target; clear("reset-msg");
+      if (mark(f.password, !strong(f.password.value))) return say("reset-msg", "8 caractères minimum, avec au moins une lettre et un chiffre.", "err");
+      busy(f, true);
+      const { error } = await sb.auth.updateUser({ password: f.password.value });
+      busy(f, false);
+      if (error) return say("reset-msg", tr(error), "err");
+      say("reset-msg", "Mot de passe modifié !", "ok");
+      setTimeout(() => renderSession(), 1200);
+    });
+
+    /* Session */
+    let session = null;
+    function renderSession() {
+      const on = !!session;
+      $("auth").hidden = on;
+      $("account").hidden = !on;
+      if (on) {
+        const meta = session.user.user_metadata || {};
+        $("hello").textContent = "Bonjour" + (meta.prenom ? " " + meta.prenom : "") + " !";
+        $("account-email").textContent = session.user.email;
+        $("avatar").textContent = (meta.prenom || session.user.email || "?")[0].toUpperCase();
+      }
+    }
+    $("logout").onclick = async () => { if (sb) await sb.auth.signOut(); };
+
+    if (sb) {
+      const { data } = await sb.auth.getSession();
+      session = data.session; renderSession();
+      sb.auth.onAuthStateChange((event, s) => {
+        if (event === "PASSWORD_RECOVERY") { $("auth").hidden = false; $("account").hidden = true; show("reset-form"); return; }
+        session = s; renderSession();
+        if (event === "SIGNED_OUT") show("login-form");
+      });
+    }
+  </script>
+</body>
+</html>
