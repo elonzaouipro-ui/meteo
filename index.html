@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html lang="fr" class="no-js">
 <head>
   <meta charset="utf-8">
@@ -335,6 +336,23 @@ dialog.modal[open] { animation: pop .3s cubic-bezier(.2,.7,.2,1); }
   .reveal { opacity: 1; transform: none; }
 }
 
+/* =========================================================
+   MENU BLANC — pour revenir au menu sombre, supprimez ce bloc.
+   ========================================================= */
+.site-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e6e6ec;
+  color: #111118;
+  color-scheme: light;
+}
+.site-header .logo { color: #111118; }
+.site-header .nav-links a { color: #5c5c6b; }
+.site-header .nav-links a:hover { color: #111118; background: #f2f2f6; }
+.site-header .nav-links a[aria-current="page"] { color: #111118; background: #ececf2; }
+.site-header .burger span { background: #111118; }
+@media (max-width: 760px) {
+  .site-header .nav-links { background: #ffffff; border-bottom: 1px solid #e6e6ec; box-shadow: 0 20px 40px -20px rgba(0,0,0,.35); }
+}
   </style>
 </head>
 <body>
