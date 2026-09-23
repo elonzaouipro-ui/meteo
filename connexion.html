@@ -187,7 +187,7 @@ input[aria-invalid="true"] { border-color: var(--err); }
         <div class="avatar" id="avatar" aria-hidden="true">?</div>
         <h1 id="hello" style="margin:0">Bonjour</h1>
         <p class="sub" id="account-email" style="margin:0"></p>
-        <a class="btn" href="index.html">Retour au site</a>
+        <a class="btn" href="dashboard.html">Mon tableau de bord</a>
         <button class="btn btn-ghost" id="logout" type="button">Se déconnecter</button>
       </section>
 
@@ -292,7 +292,7 @@ input[aria-invalid="true"] { border-color: var(--err); }
       const f = e.target; clear("login-msg");
       const bad = mark(f.email, !emailOk(f.email.value.trim())) | mark(f.password, !f.password.value);
       if (bad) return say("login-msg", "Renseignez votre e-mail et votre mot de passe.", "err");
-      if (!sb) return say("login-msg", "Mode démo : le formulaire est valide. Activez Supabase pour vous connecter réellement.", "info");
+      if (!sb) { say("login-msg", "Mode démo : ouverture du tableau de bord de démonstration…", "info"); return setTimeout(() => location.href = "dashboard.html", 900); }
       busy(f, true);
       const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
       busy(f, false);
@@ -350,8 +350,8 @@ input[aria-invalid="true"] { border-color: var(--err); }
       const { error } = await sb.auth.updateUser({ password: f.password.value });
       busy(f, false);
       if (error) return say("reset-msg", tr(error), "err");
-      say("reset-msg", "Mot de passe modifié !", "ok");
-      setTimeout(() => renderSession(), 1200);
+      say("reset-msg", "Mot de passe modifié ! Redirection…", "ok");
+      setTimeout(() => location.replace("dashboard.html"), 1200);
     });
 
     /* Session */
@@ -369,14 +369,21 @@ input[aria-invalid="true"] { border-color: var(--err); }
     }
     $("logout").onclick = async () => { if (sb) await sb.auth.signOut(); };
 
+    // Une fois connecté, on part vers le tableau de bord (sauf pendant la réinitialisation du mot de passe)
+    let recovering = /type=recovery/.test(location.hash);
     if (sb) {
-      const { data } = await sb.auth.getSession();
-      session = data.session; renderSession();
       sb.auth.onAuthStateChange((event, s) => {
-        if (event === "PASSWORD_RECOVERY") { $("auth").hidden = false; $("account").hidden = true; show("reset-form"); return; }
-        session = s; renderSession();
+        if (event === "PASSWORD_RECOVERY") { recovering = true; $("auth").hidden = false; $("account").hidden = true; show("reset-form"); return; }
+        session = s;
+        if (s && !recovering && event === "SIGNED_IN") return location.replace("dashboard.html");
+        renderSession();
         if (event === "SIGNED_OUT") show("login-form");
       });
+      const { data } = await sb.auth.getSession();
+      session = data.session;
+      if (session && !recovering) location.replace("dashboard.html");
+      else if (recovering) { $("auth").hidden = false; show("reset-form"); }
+      else renderSession();
     }
   </script>
 </body>
