@@ -311,7 +311,7 @@ input[aria-invalid="true"] { border-color: var(--err); }
       if (mark(f.password, !strong(f.password.value))) return say("signup-msg", "Mot de passe trop faible : 8 caractères minimum, avec au moins une lettre et un chiffre.", "err");
       if (mark(f.password2, f.password.value !== f.password2.value)) return say("signup-msg", "Les deux mots de passe ne correspondent pas.", "err");
       if (!f.rgpd.checked) return say("signup-msg", "Veuillez accepter la politique de confidentialité.", "err");
-      if (!sb) return say("signup-msg", "Mode démo : le formulaire est valide. Activez Supabase pour créer réellement le compte.", "info");
+      if (!sb) { say("signup-msg", "Mode démo : aucun compte n'est créé tant que Supabase n'est pas branché. Ouverture du tableau de bord de démonstration…", "info"); return setTimeout(() => location.href = "dashboard.html", 1500); }
       busy(f, true);
       const { data, error } = await sb.auth.signUp({
         email: f.email.value.trim(),
